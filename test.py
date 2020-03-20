@@ -11,7 +11,7 @@ x = np.linspace(-m / s, m / s, num=m).reshape((1, m))
 y = np.linspace(-n / s, n / s, num=n).reshape((n, 1))
 Z = np.tile(x, (n, 1)) + 1j * np.tile(y, (1, m))
  
-C = np.full((n, m), -0.4 + 0.6j)
+C = np.tile(x, (n, 1)) + 1j * np.tile(y, (1, m))
 M = np.full((n, m), True, dtype=bool)
 N = np.zeros((n, m))
 for i in range(256):
