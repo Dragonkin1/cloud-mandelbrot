@@ -5,13 +5,33 @@ import matplotlib.pyplot as plt
  
 m = 480
 n = 320
+quadant = "LOWERRIGHT"
  
 s = 300  # Scale.
-x = np.linspace(-m / s, m / s, num=m).reshape((1, m))
-y = np.linspace(-n / s, n / s, num=n).reshape((n, 1))
-Z = np.tile(x, (n, 1)) + 1j * np.tile(y, (1, m))
- 
-C = np.tile(x, (n, 1)) + 1j * np.tile(y, (1, m))
+Z = np.full((n, m), 0 + 0j)
+
+if(quadant == "UPPERRIGHT"):
+    x = np.linspace(0, m / s, num=m).reshape((1, m))
+    y = np.linspace(0, n / s, num=n).reshape((n, 1))
+    C = np.tile(x, (n, 1)) + 1j * np.tile(y, (1, m))
+elif(quadant == "UPPERLEFT"):
+    x = np.linspace(-m / s, 0, num=m).reshape((1, m))
+    y = np.linspace(0, n / s, num=n).reshape((n, 1))
+    C = np.tile(x, (n, 1)) + 1j * np.tile(y, (1, m))
+elif(quadant == "LOWERRIGHT"):
+    x = np.linspace(0, m / s, num=m).reshape((1, m))
+    y = np.linspace(-n / s, 0, num=n).reshape((n, 1))
+    C = np.tile(x, (n, 1)) + 1j * np.tile(y, (1, m))
+elif(quadant == "LOWERLEFT"):
+    x = np.linspace(-m / s, 0, num=m).reshape((1, m))
+    y = np.linspace(-n / s, 0, num=n).reshape((n, 1))
+    C = np.tile(x, (n, 1)) + 1j * np.tile(y, (1, m))
+else:
+    print("ERROR: quadant's value is not set right")
+    x = np.linspace(-m / s, m / s, num=m).reshape((1, m))
+    y = np.linspace(-n / s, n / s, num=n).reshape((n, 1))
+    C = np.tile(x, (n, 1)) + 1j * np.tile(y, (1, m))
+
 M = np.full((n, m), True, dtype=bool)
 N = np.zeros((n, m))
 for i in range(256):
