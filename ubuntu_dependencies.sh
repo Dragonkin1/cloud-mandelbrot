@@ -1,6 +1,7 @@
 #!/bin/sh
 
 sudo apt install python3-pip
+python3 -m pip install --upgrade pip
 python3 -m pip install numpy
 sudo apt install pkg-config
 sudo apt install libpng12-dev
