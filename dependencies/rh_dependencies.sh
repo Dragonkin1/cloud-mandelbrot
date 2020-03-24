@@ -7,7 +7,7 @@ sudo --enable rhel-7-server-optional-rpms
 sudo --enable rhel-server-rhscl-7-rpms
 
 #install @development. - This would let us use GCC, make, git, etc
-#sudo yum -y install @development
+sudo yum -y install @development
 
 #install rh-python36
 sudo yum -y install rh-python36
