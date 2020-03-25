@@ -1,26 +1,21 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import multiprocessing
+from multiprocessing import Pool
 
 import xmlrpc.client
 from xmlrpc.server import SimpleXMLRPCServer
 import socket
 
-global client_hostname
-client_hostname = None
-
-node1_hostname = "CripDev"
-node2_hostname = "CripDev"
-node3_hostname = "CripDev"
-node4_hostname = "CripDev"
+node1_hostname = socket.gethostname()
+node2_hostname = socket.gethostname()
+node3_hostname = socket.gethostname()
+node4_hostname = socket.gethostname()
 control_hostname = socket.gethostname()
 
 render_socket = 1234
 control_socket = 5678
 client_socket = 8000
-
-global client
-client = None
 
 node1 = xmlrpc.client.ServerProxy("http://" + node1_hostname + ":" + str(render_socket) + "/")
 node2 = xmlrpc.client.ServerProxy("http://" + node2_hostname + ":" + str(render_socket) + "/")
@@ -35,7 +30,7 @@ def combine_quadrants(images, qSize):
 	out[hq:2*hq, :wq]     = images[2]
 	out[hq:2*hq, wq:2*wq] = images[3]
 	plt.imshow(out)
-	save(out, 2*qSize)
+	return save(out, 2*qSize)
 
 def save(image, size):
 	fig = plt.figure()
@@ -46,41 +41,41 @@ def save(image, size):
 	plt.imshow(image)
 	plt.savefig('out.png')
 	plt.close()
-	sendImage("out.png")
+	return sendImage("test.txt")
+
+
+
+def launchProc(nodeQuad):
+	return nodeQuad[0].mandelbrot(nodeQuad[1], nodeQuad[2])
 
 def run(size):
-	threads = []
-	threads.append(multiprocessing.Process(target=node1.mandelbrot, args=(size, "UPPERLEFT")))
-	threads.append(multiprocessing.Process(target=node2.mandelbrot, args=(size, "UPPERRIGHT")))
-	threads.append(multiprocessing.Process(target=node3.mandelbrot, args=(size, "LOWERLEFT")))
-	threads.append(multiprocessing.Process(target=node4.mandelbrot, args=(size, "LOWERRIGHT")))
+	nodeJobs = []
+	nodeJobs.append([node1, size, "UPPERLEFT"])
+	nodeJobs.append([node2, size, "UPPERRIGHT"])
+	nodeJobs.append([node3, size, "LOWERLEFT"])
+	nodeJobs.append([node4, size, "LOWERRIGHT"])
+	#threads.append(multiprocessing.Process(target=node2.mandelbrot, args=(size, "UPPERRIGHT")))
+	#threads.append(multiprocessing.Process(target=node3.mandelbrot, args=(size, "LOWERLEFT")))
+	#threads.append(multiprocessing.Process(target=node4.mandelbrot, args=(size, "LOWERRIGHT")))
 
-	for t in threads:
-		print("starting")
-		t.start()
-		
+	print("starting")
+	p = Pool(processes=4)
+	data = p.map(launchProc, nodeJobs)
+	print("ending")
+	p.close()
 
-	for t in threads:
-		t.join()
-		print("ending")
+	for datum in data:
+		datafile = open(datum[0], "wb")
+		datafile.write(datum[1])
+		datafile.close()
 
 	quads = ["UPPERLEFT.png", "UPPERRIGHT.png", "LOWERLEFT.png", "LOWERRIGHT.png"]
 	qImages = []
 
 	for q in quads:
-		qImages.append(plt.imread(q)[:,:,:3])
+		qImages.apppend(plt.imread(q)[:,:,:3])
 
-	combine_quadrants(qImages, size)
-	return True
-
-def receiveImage(filename, data):
-	print("receiving")
-	imagefile = open(filename, "wb")
-	print("writing file")
-	imagefile.write(data.data)
-	print("done")
-	imagefile.close()
-	return True
+	return combine_quadrants(qImages, size)
 
 def sendImage(filename):
     global client
@@ -90,20 +85,10 @@ def sendImage(filename):
     print("done")
     image.close()
     print("sending")
-    client.receiveImage(filename, data)
-    print("done")
-
-def connectInit(host):
-	global client_hostname
-	global client
-	client_hostname = host
-	client = xmlrpc.client.ServerProxy("http://" + client_hostname + ":" + str(client_socket) + "/")
-	return True
+    return data
 
 server = SimpleXMLRPCServer((control_hostname, control_socket))
 server.register_function(run, "run")
-server.register_function(receiveImage, "receiveImage")
-server.register_function(connectInit, "connectInit")
 server.serve_forever()
 
 

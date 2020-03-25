@@ -8,7 +8,7 @@ import xmlrpc.client
 import socket
 
 node_hostname = socket.gethostname()
-control_hostname = "CripDev"
+control_hostname = node_hostname
 render_socket = 1234
 control_socket = 5678
 control = xmlrpc.client.ServerProxy("http://" + control_hostname + ":" + str(control_socket) + "/")
@@ -49,8 +49,7 @@ def mandelbrot(size, quadrant):
         Z[M] = Z[M] * Z[M] + C[M]
         M[np.abs(Z) > 2] = False
         N[M] = i
-    saveImage(quadrant, size, N)
-    return True
+    return saveImage(quadrant, size, N)
 
 def saveImage(name, size, colorArray):
     fig = plt.figure()
@@ -61,15 +60,14 @@ def saveImage(name, size, colorArray):
     plt.imshow(np.flipud(colorArray), cmap='Spectral')
     plt.savefig(name + '.png')
     plt.close()
-    sendImage(name + '.png')
+    return sendImage(name + '.png')
 
 def sendImage(filename):
     image = open(filename, "rb")
     data = xmlrpc.client.Binary(image.read())
     print("sending file")
-    control.receiveImage(filename, data)
     image.close()
-    print("done")
+    return [filename, data]
 
 server = SimpleXMLRPCServer((node_hostname, render_socket))
 server.register_function(mandelbrot, "mandelbrot")
