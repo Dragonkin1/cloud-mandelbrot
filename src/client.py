@@ -16,11 +16,11 @@ control_node = xmlrpc.client.ServerProxy("http://" + control_hostname + ":" + st
 def ask():
 	quit = 3
 	size = 9000
-	while size>8000 or size<0:
+	while size>8000 or size<102:
 		size = int(int(input("How large (tall and wide) do you want the image to be (in pixels, must be 8000 or less): "))/2)
 	imagedata  = control_node.run(size)
-	out = open("out.png", "wb")
-	out.write(imagedata)
+	out = open("outRECEIVED.png", "wb")
+	out.write(imagedata.data)
 	out.close()
 	while not quit==1 and not quit==2:
 		try:

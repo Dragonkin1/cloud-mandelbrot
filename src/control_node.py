@@ -41,29 +41,38 @@ def save(image, size):
 	plt.imshow(image)
 	plt.savefig('out.png')
 	plt.close()
-	return sendImage("test.txt")
+	return sendImage("out.png")
 
-
+global currentData
+global data
+data = []
+currentData = None
 
 def launchProc(nodeQuad):
-	return nodeQuad[0].mandelbrot(nodeQuad[1], nodeQuad[2])
+	global currentData
+	global data
+	currentData = nodeQuad[0].mandelbrot(nodeQuad[1], nodeQuad[2])
+	print(currentData)
+	data.append(currentData)
 
 def run(size):
+	global currentData
+	global data
+
 	nodeJobs = []
-	nodeJobs.append([node1, size, "UPPERLEFT"])
-	nodeJobs.append([node2, size, "UPPERRIGHT"])
-	nodeJobs.append([node3, size, "LOWERLEFT"])
-	nodeJobs.append([node4, size, "LOWERRIGHT"])
-	#threads.append(multiprocessing.Process(target=node2.mandelbrot, args=(size, "UPPERRIGHT")))
-	#threads.append(multiprocessing.Process(target=node3.mandelbrot, args=(size, "LOWERLEFT")))
-	#threads.append(multiprocessing.Process(target=node4.mandelbrot, args=(size, "LOWERRIGHT")))
+	nodeJobs.append(multiprocessing.Process(target=launchProc, args=([[node1, size, "UPPERLEFT"]])))
+	nodeJobs.append(multiprocessing.Process(target=launchProc, args=([[node2, size, "UPPERRIGHT"]])))
+	nodeJobs.append(multiprocessing.Process(target=launchProc, args=([[node3, size, "LOWERLEFT"]])))
+	nodeJobs.append(multiprocessing.Process(target=launchProc, args=([[node4, size, "LOWERRIGHT"]])))
 
 	print("starting")
-	p = Pool(processes=4)
-	data = p.map(launchProc, nodeJobs)
-	print("ending")
-	p.close()
 
+	for j in nodeJobs:
+		j.start()
+	for j in nodeJobs:
+		j.join()
+
+	print("ending")
 	for datum in data:
 		datafile = open(datum[0], "wb")
 		datafile.write(datum[1])
@@ -73,7 +82,7 @@ def run(size):
 	qImages = []
 
 	for q in quads:
-		qImages.apppend(plt.imread(q)[:,:,:3])
+		qImages.append(plt.imread(q)[:,:,:3])
 
 	return combine_quadrants(qImages, size)
 
@@ -85,10 +94,11 @@ def sendImage(filename):
     print("done")
     image.close()
     print("sending")
-    return data
+    return data.data
 
 server = SimpleXMLRPCServer((control_hostname, control_socket))
 server.register_function(run, "run")
+server.register_introspection_functions()
 server.serve_forever()
 
 

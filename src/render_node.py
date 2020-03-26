@@ -49,6 +49,7 @@ def mandelbrot(size, quadrant):
         Z[M] = Z[M] * Z[M] + C[M]
         M[np.abs(Z) > 2] = False
         N[M] = i
+    print("AAAAAAAAAAAAAAAAAAAAAAAAH")
     return saveImage(quadrant, size, N)
 
 def saveImage(name, size, colorArray):
@@ -71,4 +72,5 @@ def sendImage(filename):
 
 server = SimpleXMLRPCServer((node_hostname, render_socket))
 server.register_function(mandelbrot, "mandelbrot")
+server.register_introspection_functions()
 server.serve_forever()
